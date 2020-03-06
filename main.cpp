@@ -32,7 +32,8 @@ struct RuleParser {
 		return ok;
 	}
 
-	int doerr(string name) {
+	// helpers
+	int doerr(string name, string msg="") {
 		throw string("error in "+name+", line 1");
 		return 0;
 	}
@@ -48,9 +49,15 @@ struct RuleParser {
 		return parent.kids.back();
 	}
 
+	Node& backn(Node& parent) {
+		if (!parent.kids.size()) doerr("backn", "out of range");
+		return parent.kids.back();
+	}
+
+	// main structure parsing
 	int defrule(Node& res) {
-		res.kids.push_back({ "define" });
-		auto& n = res.kids.back();
+		//res.kids.push_back({ "define" });
+		auto& n = pushn(res, { "define" });
 		if (!identifier(n.val)) goto err;
 		wspace();
 		if (!getstr(":=")) goto err;
@@ -65,7 +72,7 @@ struct RuleParser {
 	int getor(Node& res) {
 		if (!getand(res)) goto err;
 		if (input.peek() == '|') {
-			auto& n = res.kids.back();
+			auto& n = backn(res);
 			n = { "|", "", { n } };
 			while (input.peek() == '|') {
 				input.get();
@@ -79,21 +86,23 @@ struct RuleParser {
 
 	int getand(Node& res) {
 		auto& n = pushn(res, { "&" });
-//		string s;
-//		wspace();
-//		while (identifier(s))
-//			pushn(n, { "rule", s }), wspace();
 		while (modifier(n)) ;
+		if (n.kids.size() == 0) doerr("get-and", "rule expected");
 		return 1;
 	}
 
 	int modifier(Node& res) {
 		string s;
+		char c;
 		if (!atom(res)) return 0;
-		while (modoperator(s)) {
-			auto& n = res.kids.back();
-			n = { s, "", { n } };
-		}
+		// multiples operators
+		c = input.peek();
+		if (c == '*' || c == '+' || c == '?')
+			backn(res) = { string(1, input.get()), "", { backn(res) } };
+		// exclude operator
+		c = input.peek();
+		if (c == '~')
+			backn(res) = { string(1, input.get()), "", { backn(res) } };
 		return 1;
 	}
 
@@ -108,8 +117,8 @@ struct RuleParser {
 	int brackets(Node& res) {
 		if (input.peek() != '(') return 0;
 		input.get();
-		pushn(res, { "()" });
-		if (!getor(res.kids.back())) goto err;
+		auto& n = pushn(res, { "()" });
+		if (!getor(n)) goto err;
 		wspace();
 		if (input.peek() != ')') goto err;
 		input.get();
