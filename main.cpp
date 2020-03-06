@@ -83,22 +83,39 @@ struct RuleParser {
 //		wspace();
 //		while (identifier(s))
 //			pushn(n, { "rule", s }), wspace();
-		while (getmod(n)) ;
+		while (modifier(n)) ;
 		return 1;
 	}
 
-	int getmod(Node& res) {
+	int modifier(Node& res) {
+		string s;
+		if (!atom(res)) return 0;
+		while (modoperator(s)) {
+			auto& n = res.kids.back();
+			n = { s, "", { n } };
+		}
+		return 1;
+	}
+
+	int atom(Node& res) {
 		string s;
 		wspace();
-		if (identifier(s)) {
-			pushn(res, { "rule", s });
-			if (modoperator(s)) {
-				auto& n = res.kids.back();
-				n = { s, "", { n } };
-			}
-			return 1;
-		}
+		if (identifier(s)) return pushn(res, { "rule", s }), 1;
+		if (brackets(res)) return 1;
 		return 0;
+	}
+
+	int brackets(Node& res) {
+		if (input.peek() != '(') return 0;
+		input.get();
+		pushn(res, { "()" });
+		if (!getor(res.kids.back())) goto err;
+		wspace();
+		if (input.peek() != ')') goto err;
+		input.get();
+		return 1;
+		err:
+		return doerr("brackets");
 	}
 
 	// basic parsing
@@ -121,7 +138,8 @@ struct RuleParser {
 
 	int modoperator(string& s) {
 		s = "";
-		if (input.peek() == '*' || input.peek() == '+')
+		char c = input.peek();
+		if (c == '*' || c == '+' || c == '?' || c == '~')
 			s += input.get();
 		return s.length() > 0;
 	}
@@ -144,5 +162,5 @@ struct RuleParser {
 int main() {
 	printf("start\n");
 	RuleParser p;
-	p.parseline("test := blah+ bloo* | blob | boob");
+	p.parseline("test := blah+~ bloo* | blob | (boob | flob)+");
 }
