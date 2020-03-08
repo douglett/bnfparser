@@ -10,5 +10,5 @@ int main() {
 	p.parsefile("dbas.bnf");
 	RuleRunner r;
 	r.define(p.deflist);
-//	r.runfile("test1.bas");
+	r.runfile("test1.bas", "line");
 }
