@@ -18,7 +18,7 @@ struct RuleParser {
 		std::fstream fs(fname, std::ios::in);
 		if (!fs.is_open())
 			return fprintf(stderr, "error: could not open file: %s\n", fname.c_str()), 1;
-		deflist = { "def-list" }, lcount = 0;
+		deflist = { "def-list" }, lcount = 0; // reset state
 		int errcode = 0;
 		try {
 			string s;
@@ -27,35 +27,38 @@ struct RuleParser {
 				lcount++;
 				if (!defrule(deflist)) { errcode = 1; break; }
 			}
-		} catch(string err) {
+		} catch (Node err) {
 			errcode = 1;
-			fprintf(stderr, "error: %s\n", err.c_str());
+			std::cerr << ptools::shown(err);
 		}
-		std::cout << shown(deflist);
+		std::cout << ptools::shown(deflist);
 		return errcode;
 	}
 
 	int parseline(string ln) {
 		input.str(ln), input.seekg(0);
 		deflist = { "rule-list" }, lcount = 1;
-		int ok = 0;
-		try { ok = defrule(deflist); }
-		catch (string err) { std::cerr << "error: " << err << std::endl; }
+		int errcode = 0;
+		try {
+			if (!defrule(deflist)) errcode = 1;
+		} catch (Node err) {
+			errcode = 1;
+			std::cerr << ptools::shown(err);
+		}
 		std::cout << ptools::shown(deflist);
-		return ok;
+		return errcode;
 	}
 
 	// helpers
 	int doerr(string name, string msg="") {
-		throw string("error in "+name+", line "+std::to_string(lcount));
+		Node n = { "error", "rule-parser", {
+			{ "rule", name },
+			{ "message", msg },
+			{ "line", std::to_string(lcount) }
+		}};
+		throw n;
 		return 0;
 	}
-
-//	void shown(const Node& n, const int ind=0) {
-//		std::cout << string(ind*2, ' ') << n.type << (n.val.length() ? " ["+n.val+"]" : "") << std::endl;
-//		for (auto& nn : n.kids)
-//			shown(nn, ind+1);
-//	}
 
 	Node& pushn(Node& parent, const Node& child) {
 		parent.kids.push_back(child);

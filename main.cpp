@@ -8,7 +8,7 @@ int main() {
 	RuleParser p;
 	//p.parseline("test := blah+~ bloo* | blob | (boob | flob)+");
 	p.parsefile("dbas.bnf");
-	RuleRunner r;
-	r.define(p.deflist);
-	r.runfile("test1.bas", "line");
+//	RuleRunner r;
+//	r.define(p.deflist);
+//	r.runfile("test1.bas", "line");
 }

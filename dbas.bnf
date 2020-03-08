@@ -1,2 +1,4 @@
 identifier $= alpha alphanum*
+number $= numeral+
 line := identifier* endl
+dim := "dim" identifier "=" number endl
