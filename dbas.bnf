@@ -3,7 +3,8 @@ identifier    $= alpha alphanum*
 number        $= numeral+
 
 # control structures
-dim           := "dim" identifier "=" number endl
+emptyline     := endl
+dim           := "dim"~ identifier "="~ number endl~
 
 # the program
-prog          := dim* EOF
+prog          := (dim | emptyline) EOF

@@ -1,1 +1,1 @@
-dim blah=1
+dim blah=100
