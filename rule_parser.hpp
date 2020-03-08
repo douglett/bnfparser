@@ -54,7 +54,8 @@ struct RuleParser {
 		Node n = { "error", "rule-parser", {
 			{ "rule", name },
 			{ "message", msg },
-			{ "line", std::to_string(lcount) }
+			{ "line", std::to_string(lcount) },
+			{ "at-char", string(1, input.peek()) }
 		}};
 		throw n;
 		return 0;
@@ -127,6 +128,7 @@ struct RuleParser {
 		string s;
 		wspace();
 		if (identifier(s)) return pushn(res, { "rule", s }), 1;
+		if (strlit(s)) return pushn(res, { "literal", s }), 1;
 		if (brackets(res)) return 1;
 		return 0;
 	}
@@ -162,6 +164,18 @@ struct RuleParser {
 		return 1;
 	}
 
+	int strlit(string& s) {
+		s = "";
+		if (input.peek() != '"') return 0;
+		s += char(input.get());
+		while (input.peek() != EOF) {
+			if (endline()) break;
+			s += input.get();
+			if (s.back() == '"') return 1;
+		}
+		return doerr("strlit", "unexpected end of string");
+	}
+
 	int modoperator(string& s) {
 		s = "";
 		char c = input.peek();
@@ -179,7 +193,7 @@ struct RuleParser {
 
 	int endline() {
 		if (input.peek() == '\n' || input.peek() == EOF)
-			return 1;
+			return input.get(), 1;
 		return 0;
 	}
 };
