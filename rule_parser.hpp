@@ -15,23 +15,27 @@ struct RuleParser {
 
 	// parser entry
 	int parsefile(string fname) {
+		// load file
 		std::fstream fs(fname, std::ios::in);
 		if (!fs.is_open())
 			return fprintf(stderr, "error: could not open file: %s\n", fname.c_str()), 1;
-		deflist = { "def-list" }, lcount = 0; // reset state
+		input.str(""), input.seekg(0);
+		input << fs.rdbuf();
+		fs.close();
+		// parse
+		deflist = { "def-list" }, lcount = 1; // reset state
 		int errcode = 0;
 		try {
-			string s;
-			while (getline(fs, s)) {
-				input = std::stringstream(s);
-				lcount++;
-				if (!defrule(deflist)) { errcode = 1; break; }
-			}
+			while (!errcode)
+				if      (input.peek() == EOF) break;
+				else if (emptyline()) lcount++;
+				else if (defrule(deflist)) lcount++;
+				else    errcode = 1;
 		} catch (Node err) {
 			errcode = 1;
 			std::cerr << ptools::shown(err);
 		}
-		std::cout << ptools::shown(deflist);
+		//std::cout << ptools::shown(deflist);
 		return errcode;
 	}
 
@@ -71,6 +75,13 @@ struct RuleParser {
 	}
 
 	// main structure parsing
+	int emptyline() {
+		wspace();
+		if (input.peek() == '#') // check for line comments. parse out but exclude
+			while (!ptools::endline(input.peek())) input.get();
+		return endline();
+	}
+
 	int defrule(Node& res) {
 		string id;
 		auto& n = pushn(res, { "define" });
@@ -192,7 +203,7 @@ struct RuleParser {
 	}
 
 	int endline() {
-		if (input.peek() == '\n' || input.peek() == EOF)
+		if (ptools::endline(input.peek()))
 			return input.get(), 1;
 		return 0;
 	}

@@ -1,5 +1,9 @@
-identifier $= alpha alphanum*
-number $= numeral+
-line := identifier* endl
-dim := "dim" identifier "=" number endl
-prog := line dim
+# some basic word types
+identifier    $= alpha alphanum*
+number        $= numeral+
+
+# control structures
+dim           := "dim" identifier "=" number endl
+
+# the program
+prog          := dim* EOF

@@ -2,6 +2,7 @@
 #include <string>
 #include <map>
 #include <fstream>
+#include <sstream>
 #include "ptools.hpp"
 
 
@@ -9,7 +10,7 @@ struct RuleRunner {
 	typedef  std::string  string;
 	typedef  ptools::Node  Node;
 	std::map<string, Node> rulelist, ruleliststr;
-	std::fstream input;
+	std::stringstream input;
 	Node prog;
 
 	// program entry
@@ -26,17 +27,33 @@ struct RuleRunner {
 		return 0;
 	}
 
+	// runtime entry
 	int runfile(const string& fname, const string& rulename="prog") {
-		input.open(fname, std::ios::in);
-		if (!input.is_open())
+		// load file
+		std::fstream fs(fname, std::ios::in);
+		if (!fs.is_open())
 			return fprintf(stderr, "could not open file: %s\n", fname.c_str()), 1;
-		int ok = 0;
+		input.str(""), input.clear();
+		input << fs.rdbuf();
+		fs.close();
+		//
 		prog = { "prog" };
-		try { ok = dorule(rulename, prog); }
-		catch (Node err) { std::cerr << ptools::shown(err); }
-		input.close();
+		int errcode = 0;
+		try {
+			if (!dorule(rulename, prog))
+				errcode = 1;
+		}
+		catch (Node err) {
+			errcode = 1;
+			std::cerr << ptools::shown(err);
+		}
 		std::cout << ptools::shown(prog);
-		return !ok; // returns 1 on error
+		return errcode; // returns 1 on error
+	}
+
+	int runline(const string& s) {
+		// test stuff here
+		return 0;
 	}
 
 	// helpers
@@ -54,6 +71,11 @@ struct RuleRunner {
 		parent.kids.push_back(child);
 		return parent.kids.back();
 	}
+	Node  popn(Node& parent) {
+		if (!parent.kids.size()) doerr("popn", "out of range");
+		auto n = parent.kids.back();
+		return parent.kids.pop_back(), n;
+	}
 	Node& backn(Node& parent) {
 		if (!parent.kids.size()) doerr("backn", "out of range");
 		return parent.kids.back();
@@ -67,7 +89,8 @@ struct RuleRunner {
 		if (rulelist.count(name)) {
 			const auto& rule = rulelist[name];
 			pushn(res, { name });
-			return dosubrule(name, rule, backn(res));
+			if (dosubrule( name, rule, backn(res) )) return 1;
+			return popn(res), 0; // fail - remove from list
 		}
 		// string rules
 		string s;
@@ -106,10 +129,10 @@ struct RuleRunner {
 //		if (name == "ucase"   ) return ucase(input.peek()) ? (res += input.get(), 1) : 0;
 //		if (name == "lcase"   ) return lcase(input.peek()) ? (res += input.get(), 1) : 0;
 		if (name == "alpha"   ) return alpha(input.peek()) ? (res += input.get(), 1) : 0;
-//		if (name == "numeral" ) return numeral(input.peek()) ? (res += input.get(), 1) : 0;
+		if (name == "numeral" ) return numeral(input.peek()) ? (res += input.get(), 1) : 0;
 		if (name == "alphanum") return alphanum(input.peek()) ? (res += input.get(), 1) : 0;
-		if (name == "endl"    ) return input.peek() == '\n' || input.peek() == EOF ? (res += input.get(), 1) : 0;
-//		if (name == "EOF"     ) return input.peek() == EOF ? (res += input.get(), 1) : 0;
+		if (name == "endl"    ) return endline(input.peek()) ? (res += input.get(), 1) : 0;
+		if (name == "EOF"     ) return input.peek() == EOF ? (res += input.get(), 1) : 0;
 
 		// user defined string rules
 		if (ruleliststr.count(name)) {
@@ -121,13 +144,19 @@ struct RuleRunner {
 	// warning: more code reuse issues
 	int dosubrulestr(const string& name, const Node& rule, string& res) {
 		const int p = input.tellg();
+		string tmp;
 		if (rule.type == "&") {
 			for (auto& r : rule.kids)
-				if (dosubrulestr(name, r, res)) ;
+				if (dosubrulestr(name, r, tmp)) ;
 				else return input.seekg(p), 0;
-			return 1;
+			return res += tmp, 1;
 		}
 		if (rule.type == "*") {
+			while (dosubrulestr(name, rule.kids.at(0), res)) ;
+			return 1;
+		}
+		if (rule.type == "+") {
+			if (!dosubrulestr(name, rule.kids.at(0), res)) return 0;
 			while (dosubrulestr(name, rule.kids.at(0), res)) ;
 			return 1;
 		}

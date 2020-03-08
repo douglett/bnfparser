@@ -16,6 +16,7 @@ namespace ptools {
 	int numeral(char c) { return c >= '0' && c <= '9'; }
 	int alphanum(char c) { return alpha(c) || numeral(c); }
 	int wspace(char c) { return c == ' ' || c == '\t'; }
+	int endline(char c) { return c == '\n' || c == EOF; }
 
 	// node tools
 	string shown(const Node& n, const int ind=0) {
