@@ -4,6 +4,7 @@
 
 
 namespace ptools {
+	typedef  std::string  string;
 	struct Node {
 		std::string type, val;
 		std::vector<Node> kids;
@@ -16,10 +17,24 @@ namespace ptools {
 	int alphanum(char c) { return alpha(c) || numeral(c); }
 	int wspace(char c) { return c == ' ' || c == '\n'; }
 
-	std::string shownode(const Node& n, const int ind=0) {
-		std::string s = std::string(ind*2, ' ') + n.type + (n.val.length() ? " ["+n.val+"]" : "") + "\n";
+	// node tools
+	string shown(const Node& n, const int ind=0) {
+		//std::string s = std::string(ind*2, ' ') + n.type + (n.val.length() ? " ["+n.val+"]" : "") + "\n";
+		string s = string(ind*2, ' ')+n.type+": "+n.val+"\n";
 		for (auto& nn : n.kids)
-			s += shownode(nn, ind+1);
+			s += shown(nn, ind+1);
 		return s;
 	}
+
+	//string showc
+
+//	Node& pushn(Node& parent, const Node& child) {
+//		parent.kids.push_back(child);
+//		return parent.kids.back();
+//	}
+//
+//	Node& backn(Node& parent) {
+//		if (!parent.kids.size()) doerr("backn", "out of range");
+//		return parent.kids.back();
+//	}
 }

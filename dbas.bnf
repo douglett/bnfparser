@@ -1,2 +1,2 @@
-identifier := alpha alphanumm*
-line := identifier endl
+identifier := alpha alphanum*
+line := identifier* endl
