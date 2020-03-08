@@ -30,7 +30,7 @@ struct RuleRunner {
 			return fprintf(stderr, "could not open file: %s\n", fname.c_str()), 1;
 		int ok = 0;
 		prog = { "prog" };
-		try { ok = dorulen(rulename, prog); }
+		try { ok = dorule(rulename, prog); }
 		catch (Node err) { std::cerr << ptools::shown(err); }
 		input.close();
 		std::cout << ptools::shown(prog);
@@ -48,16 +48,16 @@ struct RuleRunner {
 	}
 
 	// run rules
-	int dorulen(const string& name, Node& res) {
+	int dorule(const string& name, Node& res) {
 		// user defined rules
 		if (rulelist.count(name)) {
 			const auto& rule = rulelist[name];
 			res.kids.push_back({ name });
-			return dorulen(name, rule, res.kids.back());
+			return dorule(name, rule, res.kids.back());
 		}
 		//
 		string s;
-		if (dorules(name, s)) {
+		if (dorulestr(name, s)) {
 			res.kids.push_back({ name, s });
 			return 1;
 		}
@@ -65,23 +65,23 @@ struct RuleRunner {
 		//return doerr(name, "missing rule");
 	}
 
-	int dorulen(const string& name, const Node& rule, Node& res) {
+	int dorule(const string& name, const Node& rule, Node& res) {
 		if (rule.type == "&") {
 			for (auto& r : rule.kids)
-				if (dorulen(name, r, res)) ;
+				if (dorule(name, r, res)) ;
 				else return 0;
 			return 1;
 		}
 		if (rule.type == "*") {
-			while (dorulen(name, rule.kids.at(0), res)) ;
+			while (dorule(name, rule.kids.at(0), res)) ;
 			return 1;
 		}
 		if (rule.type == "rule")
-			return dorulen(rule.val, res);
+			return dorule(rule.val, res);
 		return doerr(name, "unknown rule type: ["+rule.type+"]");
 	}
 
-	int dorules(const string& name, string& res) {
+	int dorulestr(const string& name, string& res) {
 		using namespace ptools;
 		// built-in rules
 		if (name == "ucase"   ) return ucase(input.peek()) ? (res += input.get(), 1) : 0;
