@@ -31,7 +31,7 @@ struct RuleParser {
 			errcode = 1;
 			fprintf(stderr, "error: %s\n", err.c_str());
 		}
-		shownode(deflist);
+		std::cout << shown(deflist);
 		return errcode;
 	}
 
@@ -41,7 +41,7 @@ struct RuleParser {
 		int ok = 0;
 		try { ok = defrule(deflist); }
 		catch (string err) { std::cerr << "error: " << err << std::endl; }
-		shownode(deflist);
+		std::cout << ptools::shown(deflist);
 		return ok;
 	}
 
@@ -51,17 +51,16 @@ struct RuleParser {
 		return 0;
 	}
 
-	void shownode(const Node& n, const int ind=0) {
-		std::cout << string(ind*2, ' ') << n.type << (n.val.length() ? " ["+n.val+"]" : "") << std::endl;
-		for (auto& nn : n.kids)
-			shownode(nn, ind+1);
-	}
+//	void shown(const Node& n, const int ind=0) {
+//		std::cout << string(ind*2, ' ') << n.type << (n.val.length() ? " ["+n.val+"]" : "") << std::endl;
+//		for (auto& nn : n.kids)
+//			shown(nn, ind+1);
+//	}
 
 	Node& pushn(Node& parent, const Node& child) {
 		parent.kids.push_back(child);
 		return parent.kids.back();
 	}
-
 	Node& backn(Node& parent) {
 		if (!parent.kids.size()) doerr("backn", "out of range");
 		return parent.kids.back();
@@ -69,11 +68,13 @@ struct RuleParser {
 
 	// main structure parsing
 	int defrule(Node& res) {
-		//res.kids.push_back({ "define" });
+		string id;
 		auto& n = pushn(res, { "define" });
-		if (!identifier(n.val)) goto err;
+		if (!identifier(id)) goto err;
 		wspace();
-		if (!getstr(":=")) goto err;
+		if      (getstr(":=")) n = { "define", id };
+		else if (getstr("$=")) n = { "define-str", id };
+		else    goto err;
 		wspace();
 		if (!getor(n)) goto err;
 		if (!endline()) goto err;
