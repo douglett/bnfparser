@@ -15,7 +15,7 @@ namespace ptools {
 	int alpha(char c) { return ucase(c) || lcase(c); }
 	int numeral(char c) { return c >= '0' && c <= '9'; }
 	int alphanum(char c) { return alpha(c) || numeral(c); }
-	int wspace(char c) { return c == ' ' || c == '\n'; }
+	int wspace(char c) { return c == ' ' || c == '\t'; }
 
 	// node tools
 	string shown(const Node& n, const int ind=0) {

@@ -88,6 +88,12 @@ struct RuleRunner {
 			while (dosubrule(name, rule.kids.at(0), res)) ;
 			return 1;
 		}
+		if (rule.type == "literal") {
+			string tmp;
+			if (getliteral(rule.val, tmp))
+				return pushn(res, { rule.val, tmp }), 1;
+			return 0;
+		}
 		if (rule.type == "rule")
 			return dorule(rule.val, res);
 		return doerr(name, "unknown rule type: ["+rule.type+"]");
@@ -95,14 +101,14 @@ struct RuleRunner {
 
 	// run string rules
 	int dorulestr(const string& name, string& res) {
-//		using namespace ptools;
+		using namespace ptools;
 		// built-in string rules
 //		if (name == "ucase"   ) return ucase(input.peek()) ? (res += input.get(), 1) : 0;
 //		if (name == "lcase"   ) return lcase(input.peek()) ? (res += input.get(), 1) : 0;
-//		if (name == "alpha"   ) return alpha(input.peek()) ? (res += input.get(), 1) : 0;
+		if (name == "alpha"   ) return alpha(input.peek()) ? (res += input.get(), 1) : 0;
 //		if (name == "numeral" ) return numeral(input.peek()) ? (res += input.get(), 1) : 0;
-//		if (name == "alphanum") return alphanum(input.peek()) ? (res += input.get(), 1) : 0;
-//		if (name == "endl"    ) return input.peek() == '\n' || input.peek() == EOF ? (res += input.get(), 1) : 0;
+		if (name == "alphanum") return alphanum(input.peek()) ? (res += input.get(), 1) : 0;
+		if (name == "endl"    ) return input.peek() == '\n' || input.peek() == EOF ? (res += input.get(), 1) : 0;
 //		if (name == "EOF"     ) return input.peek() == EOF ? (res += input.get(), 1) : 0;
 
 		// user defined string rules
@@ -125,6 +131,8 @@ struct RuleRunner {
 			while (dosubrulestr(name, rule.kids.at(0), res)) ;
 			return 1;
 		}
+		if (rule.type == "literal")
+			return getliteral(rule.val, res);
 		if (rule.type == "rule")
 			return dorulestr(rule.val, res);
 		return doerr(name, "unknown string-rule type: ["+rule.type+"]");
@@ -135,5 +143,14 @@ struct RuleRunner {
 		string s;
 		while (ptools::wspace(input.peek())) s += input.get();
 		return s.length() > 0;
+	}
+
+	int getliteral(const string& lit, string& res) {
+		const int p = input.tellg();
+		const auto val = lit.substr(1, lit.size()-2);
+		for (auto c : val)
+			if (c != input.get())
+				return input.seekg(p), 0;
+		return res += val, 1;
 	}
 };
