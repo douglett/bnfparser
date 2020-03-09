@@ -86,8 +86,7 @@ struct RuleRunner {
 	// run rules
 	int dorule(const string& name, Node& res) {
 		//printf("rule: %s\n", name.c_str());
-		// clear whitespace before rule
-		wspace();
+		wspace(); // clear whitespace before rule
 		// user defined rules
 		if (rulelist.count(name)) {
 			const auto& rule = rulelist[name];
@@ -103,7 +102,8 @@ struct RuleRunner {
 	}
 
 	int dosubrule(const string& name, const Node& rule, Node& res) {
-		const int p = input.tellg();
+		wspace(); // clear whitespace before rule
+		const int p = input.tellg(); // save fail position
 		if (rule.type == "|") {
 			for (auto& r : rule.kids)
 				if   (dosubrule(name, r, res)) return 1;
