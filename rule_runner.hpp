@@ -98,23 +98,26 @@ struct RuleRunner {
 		string s;
 		if (dorulestr(name, s))
 			return pushn(res, { name, s }), 1;
-		return 0;
+		return doerr("dorule", "unexpected error"); // should never happen...
 	}
 
 	int dosubrule(const string& name, const Node& rule, Node& res) {
-		wspace(); // clear whitespace before rule
+		wspace(); // clear whitespace between sub-rules
 		const int p = input.tellg(); // save fail position
+		if (rule.type == "&") {
+			int lock = 0;
+			for (auto& r : rule.kids)
+				if      (r.val == "LOCK") lock = 1;
+				else if (dosubrule(name, r, res)) ;
+				else if (lock) return doerr(name, "rule missing after lock: "+r.type+", "+r.val);
+				else    return input.seekg(p), 0;
+			return 1;
+		}
 		if (rule.type == "|") {
 			for (auto& r : rule.kids)
 				if   (dosubrule(name, r, res)) return 1;
 				else input.seekg(p);
 			return 0;
-		}
-		if (rule.type == "&") {
-			for (auto& r : rule.kids)
-				if (dosubrule(name, r, res)) ;
-				else return input.seekg(p), 0;
-			return 1;
 		}
 		if (rule.type == "*") {
 			while (dosubrule(name, rule.kids.at(0), res) && !eof()) ; // don't match forever
@@ -148,11 +151,10 @@ struct RuleRunner {
 		if (name == "alphanum") return alphanum(input.peek()) ? (res += input.get(), 1) : 0;
 		if (name == "endl"    ) return endline(input.peek()) ? (res += unescape(input.get()), 1) : 0;
 		if (name == "EOF"     ) return eof() ? (res += unescape(input.get()), 1) : 0;
-
 		// user defined string rules
-		if (ruleliststr.count(name)) {
+		if (ruleliststr.count(name))
 			return dosubrulestr(name, ruleliststr[name], res);
-		}
+		// rule not found anywhere
 		return doerr(name, "missing rule");
 	}
 

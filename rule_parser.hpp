@@ -86,6 +86,7 @@ struct RuleParser {
 		string id;
 		auto& n = pushn(res, { "define" });
 		if (!identifier(id)) goto err;
+		// TODO: built-in rules warning
 		wspace();
 		if      (getstr(":=")) n = { "define", id };
 		else if (getstr("$=")) n = { "define-str", id };
@@ -138,6 +139,7 @@ struct RuleParser {
 	int atom(Node& res) {
 		string s;
 		wspace();
+		// TODO: control rules
 		if (identifier(s)) return pushn(res, { "rule", s }), 1;
 		if (strlit(s)) return pushn(res, { "literal", s }), 1;
 		if (brackets(res)) return 1;
