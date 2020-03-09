@@ -7,4 +7,4 @@ emptyline     := endl
 dim           := "dim"~ identifier "="~ number endl~
 
 # the program
-prog          := (dim | emptyline) EOF
+prog          := (dim | emptyline)* EOF

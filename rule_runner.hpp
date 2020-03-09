@@ -85,7 +85,7 @@ struct RuleRunner {
 
 	// run rules
 	int dorule(const string& name, Node& res) {
-		printf("rule: %s\n", name.c_str());
+		//printf("rule: %s\n", name.c_str());
 		// clear whitespace before rule
 		wspace();
 		// user defined rules
@@ -117,7 +117,7 @@ struct RuleRunner {
 			return 1;
 		}
 		if (rule.type == "*") {
-			while (dosubrule(name, rule.kids.at(0), res)) ;
+			while (dosubrule(name, rule.kids.at(0), res) && !eof()) ; // don't match forever
 			return 1;
 		}
 		if (rule.type == "~") { // parse but exclude result
@@ -147,7 +147,7 @@ struct RuleRunner {
 		if (name == "numeral" ) return numeral(input.peek()) ? (res += input.get(), 1) : 0;
 		if (name == "alphanum") return alphanum(input.peek()) ? (res += input.get(), 1) : 0;
 		if (name == "endl"    ) return endline(input.peek()) ? (res += unescape(input.get()), 1) : 0;
-		if (name == "EOF"     ) return input.peek() == EOF ? (res += unescape(input.get()), 1) : 0;
+		if (name == "EOF"     ) return eof() ? (res += unescape(input.get()), 1) : 0;
 
 		// user defined string rules
 		if (ruleliststr.count(name)) {
@@ -167,12 +167,12 @@ struct RuleRunner {
 			return res += tmp, 1;
 		}
 		if (rule.type == "*") {
-			while (dosubrulestr(name, rule.kids.at(0), res)) ;
+			while (dosubrulestr(name, rule.kids.at(0), res) && !eof()) ;
 			return 1;
 		}
 		if (rule.type == "+") {
 			if (!dosubrulestr(name, rule.kids.at(0), res)) return 0;
-			while (dosubrulestr(name, rule.kids.at(0), res)) ;
+			while (!eof() && dosubrulestr(name, rule.kids.at(0), res)) ;
 			return 1;
 		}
 		if (rule.type == "()")
@@ -189,6 +189,10 @@ struct RuleRunner {
 		string s;
 		while (ptools::wspace(input.peek())) s += input.get();
 		return s.length() > 0;
+	}
+
+	int eof() {
+		return input.peek() == EOF;
 	}
 
 	int getliteral(const string& lit, string& res) {
