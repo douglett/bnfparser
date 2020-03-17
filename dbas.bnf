@@ -1,10 +1,18 @@
 # some basic word types
-identifier    $= alpha alphanum*
+identifier    $= (alpha | "_") (alphanum | "_")*
 number        $= numeral+
+
+#expressions
+expr          := number
 
 # control structures
 emptyline     := endl
-dim           := "dim"~ identifier "="~ number endl~
+dim           := "dim"~ LOCK identifier "="~ expr endl~
+function      := "function"~ LOCK identifier "("~ ")"~ endl~ (dim | emptyline~)* block "end"~ "function"~ endl~
+func_block    := (dim | emptyline~)* block
+block         := (emptyline~ | cmd_return | cmd_if)*
+cmd_return    := "return"~ LOCK expr endl~
+cmd_if        := "if"~ LOCK expr "then"~ endl~ block "end"~ "if"~ endl~
 
 # the program
-prog          := (dim | emptyline)* EOF
+prog          := LOCK (dim | emptyline~)* (function | emptyline~)* EOF

@@ -56,12 +56,22 @@ struct RuleRunner {
 		return 0;
 	}
 
+	int getlineno() {
+		const int p = input.tellg();
+		int lcount = 0;
+		input.seekg(0);
+		while (input.tellg() <= p && input.peek() != EOF)
+			if (input.get() == '\n') lcount++;
+		input.seekg(p);
+		return lcount;
+	}
+
 	// helpers
 	int doerr(const string& name, const string& msg) {
 		Node e = { "error", "rule-runner", {
 			{ "rule", name },
 			{ "message", msg },
-			// line
+			{ "line", std::to_string(getlineno() + 1) },
 			{ "at-char", string(1, input.peek()) }
 		}};
 		throw e;
@@ -98,7 +108,9 @@ struct RuleRunner {
 		string s;
 		if (dorulestr(name, s))
 			return pushn(res, { name, s }), 1;
-		return doerr("dorule", "unexpected error"); // should never happen...
+		//return doerr("dorule", "unexpected error"); // should never happen...
+		// string rule not matched
+		return 0;
 	}
 
 	int dosubrule(const string& name, const Node& rule, Node& res) {
@@ -164,9 +176,15 @@ struct RuleRunner {
 		string tmp;
 		if (rule.type == "&") {
 			for (auto& r : rule.kids)
-				if (dosubrulestr(name, r, tmp)) ;
+				if   (dosubrulestr(name, r, tmp)) ;
 				else return input.seekg(p), 0;
 			return res += tmp, 1;
+		}
+		if (rule.type == "|") {
+			for (auto& r : rule.kids)
+				if   (dosubrulestr(name, r, tmp)) return res += tmp, 1;
+				else input.seekg(p), tmp = "";
+			return 0;
 		}
 		if (rule.type == "*") {
 			while (dosubrulestr(name, rule.kids.at(0), res) && !eof()) ;

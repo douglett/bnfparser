@@ -170,9 +170,9 @@ struct RuleParser {
 
 	int identifier(string& s) {
 		s = "";
-		if (!ptools::alpha(input.peek())) return 0;
+		if (!(ptools::alpha(input.peek()) || input.peek()=='_')) return 0;
 		s += char(input.get());
-		while (ptools::alpha(input.peek()) || ptools::numeral(input.peek()))
+		while (ptools::alpha(input.peek()) || ptools::numeral(input.peek()) || input.peek()=='_')
 			s += input.get();
 		return 1;
 	}
