@@ -22,34 +22,28 @@ namespace ptools {
 		std::vector<Node> kids;
 		// methods
 		string show(const int ind=0);
+		Node& push(const Node& child);
+		Node  pop();
+		Node& back();
 	};
 
-	// Node functions
+	// Node function definitions
 	string Node::show(const int ind) {
 		string s = string(ind*2, ' ')+type+": "+val+"\n";
 		for (auto& nn : kids)
 			s += nn.show(ind+1);
 		return s;
 	}
-
-	// node tools
-//	string shown(const Node& n, const int ind=0) {
-//		//std::string s = std::string(ind*2, ' ') + n.type + (n.val.length() ? " ["+n.val+"]" : "") + "\n";
-//		string s = string(ind*2, ' ')+n.type+": "+n.val+"\n";
-//		for (auto& nn : n.kids)
-//			s += shown(nn, ind+1);
-//		return s;
-//	}
-
-	//string showc
-
-//	Node& pushn(Node& parent, const Node& child) {
-//		parent.kids.push_back(child);
-//		return parent.kids.back();
-//	}
-//
-//	Node& backn(Node& parent) {
-//		if (!parent.kids.size()) doerr("backn", "out of range");
-//		return parent.kids.back();
-//	}
+	Node& Node::push(const Node& child) {
+		kids.push_back(child);
+		return kids.back();
+	}
+	Node  Node::pop() {
+		auto n = kids.back(); // range check here
+		return kids.pop_back(), n;
+	}
+	Node& Node::back() {
+		if (!kids.size()) fprintf(stderr, "Node: back() from empty node list"), exit(1);
+		return kids.back();
+	}
 }

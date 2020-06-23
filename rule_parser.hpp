@@ -65,15 +65,6 @@ struct RuleParser {
 		return 0;
 	}
 
-	Node& pushn(Node& parent, const Node& child) {
-		parent.kids.push_back(child);
-		return parent.kids.back();
-	}
-	Node& backn(Node& parent) {
-		if (!parent.kids.size()) doerr("backn", "out of range");
-		return parent.kids.back();
-	}
-
 	// main structure parsing
 	int emptyline() {
 		wspace();
@@ -84,7 +75,7 @@ struct RuleParser {
 
 	int defrule(Node& res) {
 		string id;
-		auto& n = pushn(res, { "define" });
+		auto& n = res.push({ "define" });
 		if (!identifier(id)) goto err;
 		// TODO: built-in rules warning
 		wspace();
@@ -102,7 +93,7 @@ struct RuleParser {
 	int getor(Node& res) {
 		if (!getand(res)) goto err;
 		if (input.peek() == '|') {
-			auto& n = backn(res);
+			auto& n = res.back();
 			n = { "|", "", { n } };
 			while (input.peek() == '|') {
 				input.get();
@@ -115,7 +106,7 @@ struct RuleParser {
 	}
 
 	int getand(Node& res) {
-		auto& n = pushn(res, { "&" });
+		auto& n = res.push({ "&" });
 		while (modifier(n)) ;
 		if (n.kids.size() == 0) doerr("get-and", "rule expected");
 		return 1;
@@ -128,11 +119,11 @@ struct RuleParser {
 		// multiples operators
 		c = input.peek();
 		if (c == '*' || c == '+' || c == '?')
-			backn(res) = { string(1, input.get()), "", { backn(res) } };
+			res.back() = { string(1, input.get()), "", { res.back() } };
 		// exclude operator
 		c = input.peek();
 		if (c == '~')
-			backn(res) = { string(1, input.get()), "", { backn(res) } };
+			res.back() = { string(1, input.get()), "", { res.back() } };
 		return 1;
 	}
 
@@ -140,8 +131,8 @@ struct RuleParser {
 		string s;
 		wspace();
 		// TODO: control rules
-		if (identifier(s)) return pushn(res, { "rule", s }), 1;
-		if (strlit(s)) return pushn(res, { "literal", s }), 1;
+		if (identifier(s)) return res.push({ "rule", s }), 1;
+		if (strlit(s)) return res.push({ "literal", s }), 1;
 		if (brackets(res)) return 1;
 		return 0;
 	}
@@ -149,7 +140,7 @@ struct RuleParser {
 	int brackets(Node& res) {
 		if (input.peek() != '(') return 0;
 		input.get();
-		auto& n = pushn(res, { "()" });
+		auto& n = res.push({ "()" });
 		if (!getor(n)) goto err;
 		wspace();
 		if (input.peek() != ')') goto err;

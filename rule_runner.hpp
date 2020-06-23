@@ -16,6 +16,7 @@ struct RuleRunner {
 	// program entry
 	int define(const Node& deflist) {
 		for (auto& d : deflist.kids)
+			// TODO: logical structure
 			if (!(d.type == "define" || d.type == "define-str") || d.kids.size() != 1)
 				return fprintf(stderr, "define error: %s [%s]\n", d.type.c_str(), d.val.c_str()), 1;
 			else if (rulelist.count(d.val))
@@ -78,21 +79,6 @@ struct RuleRunner {
 		return 0;
 	}
 
-	// TODO: should be reusable
-	Node& pushn(Node& parent, const Node& child) {
-		parent.kids.push_back(child);
-		return parent.kids.back();
-	}
-	Node  popn(Node& parent) {
-		if (!parent.kids.size()) doerr("popn", "out of range");
-		auto n = parent.kids.back();
-		return parent.kids.pop_back(), n;
-	}
-	Node& backn(Node& parent) {
-		if (!parent.kids.size()) doerr("backn", "out of range");
-		return parent.kids.back();
-	}
-
 	// run rules
 	int dorule(const string& name, Node& res) {
 		//printf("rule: %s\n", name.c_str());
@@ -100,14 +86,14 @@ struct RuleRunner {
 		// user defined rules
 		if (rulelist.count(name)) {
 			const auto& rule = rulelist[name];
-			pushn(res, { name });
-			if (dosubrule( name, rule, backn(res) )) return 1;
-			return popn(res), 0; // fail - remove from list
+			res.push({ name });
+			if (dosubrule( name, rule, res.back() )) return 1;
+			return res.pop(), 0; // fail - remove from list
 		}
 		// string rules
 		string s;
 		if (dorulestr(name, s))
-			return pushn(res, { name, s }), 1;
+			return res.push({ name, s }), 1;
 		//return doerr("dorule", "unexpected error"); // should never happen...
 		// string rule not matched
 		return 0;
@@ -144,7 +130,7 @@ struct RuleRunner {
 		if (rule.type == "literal") {
 			string tmp;
 			if (getliteral(rule.val, tmp))
-				return pushn(res, { rule.val, tmp }), 1;
+				return res.push({ rule.val, tmp }), 1;
 			return 0;
 		}
 		if (rule.type == "rule")
