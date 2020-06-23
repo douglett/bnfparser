@@ -45,9 +45,9 @@ struct RuleRunner {
 		}
 		catch (Node err) {
 			errcode = 1;
-			std::cerr << ptools::shown(err);
+			std::cerr << err.show();
 		}
-		std::cout << ptools::shown(prog);
+		std::cout << prog.show();
 		return errcode; // returns 1 on error
 	}
 

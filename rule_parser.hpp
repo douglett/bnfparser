@@ -33,9 +33,9 @@ struct RuleParser {
 				else    errcode = 1;
 		} catch (Node err) {
 			errcode = 1;
-			std::cerr << ptools::shown(err);
+			std::cerr << err.show();
 		}
-		//std::cout << ptools::shown(deflist);
+		//std::cout << deflist.show();
 		return errcode;
 	}
 
@@ -47,9 +47,9 @@ struct RuleParser {
 			if (!defrule(deflist)) errcode = 1;
 		} catch (Node err) {
 			errcode = 1;
-			std::cerr << ptools::shown(err);
+			std::cerr << err.show();
 		}
-		std::cout << ptools::shown(deflist);
+		//std::cout << deflist.show();
 		return errcode;
 	}
 
