@@ -8,3 +8,6 @@ function f()
 	end if
 	return 10
 end function
+
+function f2()
+end function

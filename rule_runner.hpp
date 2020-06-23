@@ -16,15 +16,16 @@ struct RuleRunner {
 	// program entry
 	int define(const Node& deflist) {
 		for (auto& d : deflist.kids)
-			// TODO: logical structure
-			if (!(d.type == "define" || d.type == "define-str") || d.kids.size() != 1)
-				return fprintf(stderr, "define error: %s [%s]\n", d.type.c_str(), d.val.c_str()), 1;
+			if (d.val == "" || d.kids.size() == 0)
+				return fprintf(stderr, "missing rule name or definition\n"), 1;
 			else if (rulelist.count(d.val))
 				return fprintf(stderr, "duplicate rule: %s\n", d.val.c_str()), 1;
 			else if (d.type == "define")
 				rulelist[d.val] = d.kids.at(0);
 			else if (d.type == "define-str")
 				ruleliststr[d.val] = d.kids.at(0);
+			else
+				return fprintf(stderr, "unknown rule type\n"), 1;
 		return 0;
 	}
 
@@ -43,12 +44,13 @@ struct RuleRunner {
 		try {
 			if (!dorule(rulename, prog))
 				errcode = 1;
+			std::cout << prog.show();
 		}
 		catch (Node err) {
 			errcode = 1;
 			std::cerr << err.show();
 		}
-		std::cout << prog.show();
+		//std::cout << prog.show();
 		return errcode; // returns 1 on error
 	}
 
@@ -58,7 +60,9 @@ struct RuleRunner {
 	}
 
 	int getlineno() {
+		input.clear(); // clear EOF bit and errors
 		const int p = input.tellg();
+//		printf("here %d\n", p);
 		int lcount = 0;
 		input.seekg(0);
 		while (input.tellg() <= p && input.peek() != EOF)
@@ -73,7 +77,8 @@ struct RuleRunner {
 			{ "rule", name },
 			{ "message", msg },
 			{ "line", std::to_string(getlineno() + 1) },
-			{ "at-char", string(1, input.peek()) }
+			//{ "at-char", string(1, input.peek()) }
+			{ "at-char", unescape(input.peek()) }
 		}};
 		throw e;
 		return 0;
@@ -107,7 +112,7 @@ struct RuleRunner {
 			for (auto& r : rule.kids)
 				if      (r.val == "LOCK") lock = 1;
 				else if (dosubrule(name, r, res)) ;
-				else if (lock) return doerr(name, "rule missing after lock: "+r.type+", "+r.val);
+				else if (lock) return doerr(name, "rule missing after lock: ["+r.type+"], ["+r.val+"]");
 				else    return input.seekg(p), 0;
 			return 1;
 		}
