@@ -1,3 +1,4 @@
+#asd
 dim blah=100
 dim  blah2 = 102
 
@@ -10,5 +11,6 @@ function f()
 end function
 
 function f2()
-	butt
+	# balls asd
+
 end function

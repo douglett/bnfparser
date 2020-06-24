@@ -75,7 +75,7 @@ private:
 
 	// helpers
 	int doerr(const string& name, const string& msg) {
-		Node e = { "error", "rule-runner", {
+		Node e = { "error", "source-parser", {
 			{ "rule", name },
 			{ "message", msg },
 			{ "line", std::to_string(getlineno() + 1) },
@@ -128,6 +128,10 @@ private:
 			while (dosubrule(name, rule.kids.at(0), res) && !eof()) ; // don't match forever
 			return 1;
 		}
+		if (rule.type == "?") {
+			dosubrule(name, rule.kids.at(0), res);
+			return 1; // ok if match or not
+		}
 		if (rule.type == "~") { // parse but exclude result
 			Node tmp;
 			return dosubrule(name, rule.kids.at(0), tmp);
@@ -179,14 +183,21 @@ private:
 				else input.seekg(p), tmp = "";
 			return 0;
 		}
-		if (rule.type == "*") {
+		if (rule.type == "*") { // 0 or more
 			while (dosubrulestr(name, rule.kids.at(0), res) && !eof()) ;
 			return 1;
 		}
-		if (rule.type == "+") {
+		if (rule.type == "+") { // 1 or more
 			if (!dosubrulestr(name, rule.kids.at(0), res)) return 0;
 			while (!eof() && dosubrulestr(name, rule.kids.at(0), res)) ;
 			return 1;
+		}
+		if (rule.type == "!") { // not
+			// std::cout << "not here " << (char)input.peek() << std::endl;
+			// string s;
+			// std::cin >> s;
+			if (dosubrulestr(name, rule.kids.at(0), tmp)) return input.seekg(p), 0; // on match, cancel and return false (negate result)
+			return res += input.get(), 1;
 		}
 		if (rule.type == "()")
 			return dosubrulestr(name, rule.kids.at(0), res);

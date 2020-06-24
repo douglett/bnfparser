@@ -58,7 +58,7 @@ struct BNFParser {
 private:
 	// helpers
 	int doerr(string name, string msg="") {
-		Node n = { "error", "rule-parser", {
+		Node n = { "error", "bnf-parser", {
 			{ "rule", name },
 			{ "message", msg },
 			{ "line", std::to_string(lcount) },
@@ -119,6 +119,10 @@ private:
 		string s;
 		char c;
 		if (!atom(res)) return 0;
+		// negation operator
+		c = input.peek();
+		if (c == '!')
+			res.back() = { string(1, input.get()), "", { res.back() } };
 		// multiples operators
 		c = input.peek();
 		if (c == '*' || c == '+' || c == '?')
@@ -183,13 +187,13 @@ private:
 		return doerr("strlit", "unexpected end of string");
 	}
 
-	int modoperator(string& s) {
-		s = "";
-		char c = input.peek();
-		if (c == '*' || c == '+' || c == '?' || c == '~')
-			s += input.get();
-		return s.length() > 0;
-	}
+	// int modoperator(string& s) {
+	// 	s = "";
+	// 	char c = input.peek();
+	// 	if (c == '*' || c == '+' || c == '?' || c == '~')
+	// 		s += input.get();
+	// 	return s.length() > 0;
+	// }
 
 	int wspace() {
 		string s;
