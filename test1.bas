@@ -10,4 +10,5 @@ function f()
 end function
 
 function f2()
+	butt
 end function

@@ -6,15 +6,15 @@
 #include "ptools.hpp"
 
 
-struct RuleRunner {
+struct SourceParser {
 	typedef  std::string  string;
 	typedef  ptools::Node  Node;
 	std::map<string, Node> rulelist, ruleliststr;
 	std::stringstream input;
 	Node prog;
 
-	// program entry
-	int define(const Node& deflist) {
+	// set a language definition used to sort through the source code
+	int definelang(const Node& deflist) {
 		for (auto& d : deflist.kids)
 			if (d.val == "" || d.kids.size() == 0)
 				return fprintf(stderr, "missing rule name or definition\n"), 1;
@@ -29,8 +29,8 @@ struct RuleRunner {
 		return 0;
 	}
 
-	// runtime entry
-	int runfile(const string& fname, const string& rulename="prog") {
+	// load a file and apply predefined rules to parse into a program definition
+	int parsefile(const string& fname, const string& rulename="prog") {
 		// load file
 		std::fstream fs(fname, std::ios::in);
 		if (!fs.is_open())
@@ -54,15 +54,17 @@ struct RuleRunner {
 		return errcode; // returns 1 on error
 	}
 
-	int runline(const string& s) {
+	// single line rule - useful for debugging
+	int parseline(const string& s) {
 		// test stuff here
 		return 0;
 	}
 
+
+private:
 	int getlineno() {
 		input.clear(); // clear EOF bit and errors
 		const int p = input.tellg();
-//		printf("here %d\n", p);
 		int lcount = 0;
 		input.seekg(0);
 		while (input.tellg() <= p && input.peek() != EOF)

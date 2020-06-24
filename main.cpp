@@ -1,15 +1,15 @@
 #include <iostream>
-#include "rule_parser.hpp"
-#include "rule_runner.hpp"
+#include "bnf_parser.hpp"
+#include "source_parser.hpp"
 using namespace std;
 
 int test1() {
-	RuleParser p;
-	RuleRunner r;
+	BNFParser bnf;
+	SourceParser src;
 	//p.parseline("test := blah+~ bloo* | blob | (boob | flob)+");
-	return p.parsefile("dbas.bnf")
-		|| r.define(p.deflist)
-		|| r.runfile("test1.bas");
+	return bnf.parsefile("dbas.bnf")
+		|| src.definelang(bnf.deflist)
+		|| src.parsefile("test1.bas");
 }
 
 int main() {

@@ -6,14 +6,14 @@
 #include "ptools.hpp"
 
 
-struct RuleParser {
+struct BNFParser {
 	typedef  std::string  string;
 	typedef  ptools::Node  Node;
 	int lcount = 0;
 	std::stringstream input;
 	Node deflist;
 
-	// parser entry
+	// parse a BNF definition file into a lisp-ish representation of the parsing rules
 	int parsefile(string fname) {
 		// load file
 		std::fstream fs(fname, std::ios::in);
@@ -39,6 +39,7 @@ struct RuleParser {
 		return errcode;
 	}
 
+	// parse a single line rule (useful for testing)
 	int parseline(string ln) {
 		input.str(ln), input.seekg(0);
 		deflist = { "rule-list" }, lcount = 1;
@@ -53,6 +54,8 @@ struct RuleParser {
 		return errcode;
 	}
 
+
+private:
 	// helpers
 	int doerr(string name, string msg="") {
 		Node n = { "error", "rule-parser", {
